@@ -1,0 +1,15 @@
+kind: Pod
+apiVersion: v1
+metadata:
+  name: mypod
+spec:
+  containers:
+    - name: test
+      image: local-reg:5000/test
+      volumeMounts:
+      - mountPath: "/pv/esx"
+        name: mypd
+  volumes:
+    - name: mypd
+      persistentVolumeClaim:
+        claimName: es-pvc

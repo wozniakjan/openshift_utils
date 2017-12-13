@@ -1,0 +1,3 @@
+mkdir /tmp/es-tmpfs/
+chmod 777 /tmp/es-tmpfs/
+mount -t tmpfs -o size=10m tmpfs /tmp/es-tmpfs

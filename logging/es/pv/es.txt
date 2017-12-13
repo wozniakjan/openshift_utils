@@ -1,0 +1,57 @@
+folders for the volume
+----------------------
+mkdir -p /pv/es
+chmod 777 /pv/es
+chown 1000:65534 /pv/es
+
+assuming SELinux is enabled:
+----------------------------
+chcon -u system_u -r object_r -t svirt_sandbox_file_t /pv/es
+chcat -- +c0 /pv/es  #one of potential culprits for that BZ
+chcat -- +c5 /pv/es  #one of potential culprits for that BZ
+
+create PV and PVC
+-----------------
+kind: PersistentVolume
+apiVersion: v1
+metadata:
+  name: pv-es
+  labels:
+    type: local
+spec:
+  capacity:
+    storage: 1Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: "/pv/es"
+
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: es-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+
+edit es dc
+----------
+oc edit dc `oc get dc | awk '/es-data/{print($1)}'`
+
+- add this under spec.template.spec.containers with name 'elasticsearch'
+      securityContext:
+        privileged: false   #one of potential culprits for that BZ
+        runAsUser: 1000
+
+- change spec.template.spec.containers.volumes with name 'elasticsearch-storage'
+      - name: elasticsearch-storage
+        persistentVolumeClaim:
+          claimName: pv-es
+
+add to scc
+----------
+privileged to system:serviceaccount:logging:aggregated-logging-elasticsearch
+hostmount-anyuid system:serviceaccount:logging:aggregated-logging-elasticsearch

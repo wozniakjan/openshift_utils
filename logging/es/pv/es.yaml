@@ -1,0 +1,228 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  annotations:
+    kubernetes.io/created-by: |
+      {"kind":"SerializedReference","apiVersion":"v1","reference":{"kind":"ReplicationController","namespace":"logging","name":"logging-es-data-master-7ys0q013-23","uid":"92c3da31-adb1-11e7-a64b-5254004a1511","apiVersion":"v1","resourceVersion":"416153"}}
+    openshift.io/deployment-config.latest-version: "23"
+    openshift.io/deployment-config.name: logging-es-data-master-7ys0q013
+    openshift.io/deployment.name: logging-es-data-master-7ys0q013-23
+    openshift.io/scc: privileged
+  creationTimestamp: 2017-10-10T11:53:50Z
+  generateName: logging-es-data-master-7ys0q013-23-
+  labels:
+    component: es
+    deployment: logging-es-data-master-7ys0q013-23
+    deploymentconfig: logging-es-data-master-7ys0q013
+    logging-infra: elasticsearch
+    provider: openshift
+  name: logging-es-data-master-7ys0q013-23-gtdpj
+  namespace: logging
+  ownerReferences:
+  - apiVersion: v1
+    blockOwnerDeletion: true
+    controller: true
+    kind: ReplicationController
+    name: logging-es-data-master-7ys0q013-23
+    uid: 92c3da31-adb1-11e7-a64b-5254004a1511
+  resourceVersion: "418547"
+  selfLink: /api/v1/namespaces/logging/pods/logging-es-data-master-7ys0q013-23-gtdpj
+  uid: ae782c88-adb1-11e7-a64b-5254004a1511
+spec:
+  containers:
+  - args:
+    - --upstream-ca=/etc/elasticsearch/secret/admin-ca
+    - --https-address=:4443
+    - -provider=openshift
+    - -client-id=system:serviceaccount:prometheus:prometheus
+    - -client-secret-file=/var/run/secrets/kubernetes.io/serviceaccount/token
+    - -cookie-secret=d3Ztd0JFOUFDejFvR3VHRQ==
+    - -upstream=https://localhost:9200
+    - '-openshift-sar={"namespace": "logging", "verb": "view", "resource": "prometheus",
+      "group": "metrics.openshift.io"}'
+    - '-openshift-delegate-urls={"/": {"resource": "prometheus", "verb": "view", "group":
+      "metrics.openshift.io", "namespace": "logging"}}'
+    - --tls-cert=/etc/tls/private/tls.crt
+    - --tls-key=/etc/tls/private/tls.key
+    - -pass-access-token
+    - -pass-user-headers
+    image: openshift/oauth-proxy:v1.0.0
+    imagePullPolicy: Always
+    name: proxy
+    ports:
+    - containerPort: 4443
+      name: proxy
+      protocol: TCP
+    resources:
+      limits:
+        cpu: 100m
+        memory: 64Mi
+      requests:
+        cpu: 100m
+        memory: 64Mi
+    securityContext:
+      privileged: false
+    terminationMessagePath: /dev/termination-log
+    terminationMessagePolicy: File
+    volumeMounts:
+    - mountPath: /etc/tls/private
+      name: proxy-tls
+      readOnly: true
+    - mountPath: /etc/elasticsearch/secret
+      name: elasticsearch
+      readOnly: true
+    - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+      name: aggregated-logging-elasticsearch-token-50llw
+      readOnly: true
+  - env:
+    - name: DC_NAME
+      value: logging-es-data-master-7ys0q013
+    - name: NAMESPACE
+      valueFrom:
+        fieldRef:
+          apiVersion: v1
+          fieldPath: metadata.namespace
+    - name: KUBERNETES_TRUST_CERT
+      value: "true"
+    - name: SERVICE_DNS
+      value: logging-es-cluster
+    - name: CLUSTER_NAME
+      value: logging-es
+    - name: INSTANCE_RAM
+      value: 512Mi
+    - name: HEAP_DUMP_LOCATION
+      value: /elasticsearch/persistent/heapdump.hprof
+    - name: NODE_QUORUM
+      value: "1"
+    - name: RECOVER_EXPECTED_NODES
+      value: "1"
+    - name: RECOVER_AFTER_TIME
+      value: 5m
+    - name: READINESS_PROBE_TIMEOUT
+      value: "30"
+    - name: POD_LABEL
+      value: component=es
+    - name: IS_MASTER
+      value: "true"
+    - name: HAS_DATA
+      value: "true"
+    - name: PROMETHEUS_USER
+      value: system:serviceaccount:prometheus:prometheus
+    image: local-reg:5000/es
+    imagePullPolicy: Always
+    name: elasticsearch
+    ports:
+    - containerPort: 9200
+      name: restapi
+      protocol: TCP
+    - containerPort: 9300
+      name: cluster
+      protocol: TCP
+    resources:
+      limits:
+        cpu: 500m
+        memory: 512Mi
+      requests:
+        cpu: 500m
+        memory: 512Mi
+    securityContext:
+      privileged: false
+      runAsUser: 1000
+    terminationMessagePath: /dev/termination-log
+    terminationMessagePolicy: File
+    volumeMounts:
+    - mountPath: /etc/elasticsearch/secret
+      name: elasticsearch
+      readOnly: true
+    - mountPath: /usr/share/java/elasticsearch/config
+      name: elasticsearch-config
+      readOnly: true
+    - mountPath: /elasticsearch/persistent
+      name: elasticsearch-storage
+    - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+      name: aggregated-logging-elasticsearch-token-50llw
+      readOnly: true
+  dnsPolicy: ClusterFirst
+  imagePullSecrets:
+  - name: aggregated-logging-elasticsearch-dockercfg-j6sw4
+  nodeName: c1
+  restartPolicy: Always
+  schedulerName: default-scheduler
+  securityContext:
+    supplementalGroups:
+    - 65534
+  serviceAccount: aggregated-logging-elasticsearch
+  serviceAccountName: aggregated-logging-elasticsearch
+  terminationGracePeriodSeconds: 30
+  volumes:
+  - name: proxy-tls
+    secret:
+      defaultMode: 420
+      secretName: prometheus-tls
+  - name: elasticsearch
+    secret:
+      defaultMode: 420
+      secretName: logging-elasticsearch
+  - configMap:
+      defaultMode: 420
+      name: logging-elasticsearch
+    name: elasticsearch-config
+  - name: elasticsearch-storage
+    persistentVolumeClaim:
+      claimName: es-pvc
+  - name: aggregated-logging-elasticsearch-token-50llw
+    secret:
+      defaultMode: 420
+      secretName: aggregated-logging-elasticsearch-token-50llw
+status:
+  conditions:
+  - lastProbeTime: null
+    lastTransitionTime: 2017-10-10T11:53:50Z
+    status: "True"
+    type: Initialized
+  - lastProbeTime: null
+    lastTransitionTime: 2017-10-10T13:38:45Z
+    status: "True"
+    type: Ready
+  - lastProbeTime: null
+    lastTransitionTime: 2017-10-10T11:53:50Z
+    status: "True"
+    type: PodScheduled
+  containerStatuses:
+  - containerID: docker://9e169a585cc82302c3a316b58d0ea758a8aae97f86e15f695a4cf7a26d773bff
+    image: local-reg:5000/es:latest
+    imageID: docker-pullable://local-reg:5000/es@sha256:ae334242703af6c055b1bee590b8e10ea83b919a03aa9f224f2dc77d1f212b58
+    lastState:
+      terminated:
+        containerID: docker://bcd7c9027d3e8c07d5ef4e5cf8813b4a0448f49b73580d45232a6280365ee05c
+        exitCode: 137
+        finishedAt: 2017-10-10T13:17:17Z
+        reason: Error
+        startedAt: 2017-10-10T11:53:53Z
+    name: elasticsearch
+    ready: true
+    restartCount: 1
+    state:
+      running:
+        startedAt: 2017-10-10T13:38:44Z
+  - containerID: docker://7ba0f30228e3086ca72ac31ed01c107e0be12dcb1adb203ad6939be79042e717
+    image: docker.io/openshift/oauth-proxy:v1.0.0
+    imageID: docker-pullable://docker.io/openshift/oauth-proxy@sha256:48191b4beb0abcb6b81cee329133f7aa4c6e9d2cfca2ce55ef68b817d669f337
+    lastState:
+      terminated:
+        containerID: docker://010792a87d40ff37646eed1b8447de33781eb0ece11bc904b4c841bad03ca363
+        exitCode: 2
+        finishedAt: 2017-10-10T13:17:07Z
+        reason: Error
+        startedAt: 2017-10-10T11:54:01Z
+    name: proxy
+    ready: true
+    restartCount: 1
+    state:
+      running:
+        startedAt: 2017-10-10T13:38:37Z
+  hostIP: 192.168.122.183
+  phase: Running
+  podIP: 10.128.0.47
+  qosClass: Guaranteed
+  startTime: 2017-10-10T11:53:50Z
